@@ -6,6 +6,7 @@ HELP.md
 !**/src/test/**/build/
 /docs/report/**
 /docs/skills/**
+/docs/plans/**
 gradlew
 gradlew.bat
 
