@@ -17,5 +17,6 @@
 | **Phase 4**<br/>기능 확장                                                                                           | OAuth2 연동, Role 접근 제어                                                                | OAuth2, RBAC                                                              | 트러블슈팅                                                                  | 📅 |
 | **Phase 5**<br/>Reliability & Visibility                                                                        | MDC 로깅, Grafana, Zipkin                                                              | 로그 수집, 모니터링, 트레이싱                                                         | 트러블슈팅                                                                  | 📅 |
 | **부록** <br/> 사용자 관리                                                                                             | 회원가입, 비밀번호 변경, 탈퇴                                                                    | 설계                                                                        | —                                                                      | 📅 |
+=======
 
 ---
