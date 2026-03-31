@@ -9,7 +9,58 @@
   - 소셜 로그인 성공 시 기존 JWT 시스템과 연동하여 Access/Refresh 토큰 발급.
   - 보안 강화를 위해 발급된 토큰은 `HttpOnly` 쿠키를 통해 클라이언트에 전달.
 
-## 2. 구성 요소 (Components)
+## 2. 시스템 아키텍처 다이어그램
+
+```mermaid
+graph TD
+    Client[📱 Client Browser]
+
+    subgraph External_IdP [Social Identity Providers]
+        Google[🌐 Google]
+        GitHub[🐙 GitHub]
+    end
+
+    subgraph Security_Layer [Spring Security & OAuth2 Client]
+        OauthFilter[🛡️ OAuth2LoginAuthenticationFilter]
+        SuccessHandler[🔑 OAuth2SuccessHandler]
+    end
+
+    subgraph App_Layer [Application Layer]
+        UserService[⚙️ CustomOAuth2UserService]
+        UserInfo[📦 OAuth2UserInfo Factory]
+    end
+
+    subgraph Persistence_Layer [Persistence Layer]
+        Redis_RT[(🧠 Redis: Refresh Token Storage)]
+        DB[(🗄️ PostgreSQL: User Data)]
+    end
+
+    %% OAuth2 Flow
+    Client -->|1. Login Request| OauthFilter
+    OauthFilter -->|2. Redirect| Google
+    OauthFilter -->|2. Redirect| GitHub
+    Google -->|3. Auth Code / Profile| OauthFilter
+    GitHub -->|3. Auth Code / Profile| OauthFilter
+
+    %% Internal Processing
+    OauthFilter -->|4. Load User Info| UserService
+    UserService -->|5. Map & Upsert| UserInfo
+    UserInfo -.->|6. Sync| DB
+
+    %% Success & Token Issuance
+    UserService -->|7. Auth Success| SuccessHandler
+    SuccessHandler -->|8. Issue JWT via HttpOnly Cookies| Client
+    SuccessHandler -->|9. Store RT| Redis_RT
+
+    style External_IdP fill:#f5f5f5,stroke:#9e9e9e
+    style Security_Layer fill:#e1f5fe,stroke:#01579b
+    style SuccessHandler fill:#fff9c4,stroke:#fbc02d
+    style Redis_RT fill:#ffcdd2,stroke:#c62828
+```
+
+---
+
+## 3. 구성 요소 (Components)
 
 ### 2.1. OAuth2 Client Layer
 - **`CustomOAuth2UserService`**: 소셜 서비스로부터 유저 정보를 가져와 우리 시스템의 유저 모델로 변환 및 DB 동기화(Upsert).
