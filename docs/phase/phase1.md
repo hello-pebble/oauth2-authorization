@@ -34,5 +34,6 @@
 - **성능**: 대규모 트래픽 시 세션 메모리 점유 및 DB 조회 부하 예상
 
 ### 🔗 연관 자료
+- **[아키텍처](../architecture/phase1_architecture.md)**
 - **[TDR](tdr/phase1-tdr.md)**
 - **[트러블슈팅](troubleshooting/phase1-troubleshooting.md)**

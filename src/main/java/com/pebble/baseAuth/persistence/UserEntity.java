@@ -26,8 +26,14 @@ public class UserEntity {
     @Column(nullable = false, unique = true, length = 30)
     private String username;
 
-    @Column(nullable = false, length = 255)
+    @Column(length = 255)
     private String password;
+
+    @Column(length = 20)
+    private String provider;
+
+    @Column(length = 50)
+    private String providerId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -43,20 +49,22 @@ public class UserEntity {
 
     private LocalDateTime deletedAt;
 
-    public UserEntity(String username, String password, UserRole role) {
+    public UserEntity(String username, String password, String provider, String providerId, UserRole role) {
         this.username = username;
         this.password = password;
+        this.provider = provider;
+        this.providerId = providerId;
         this.role = (role != null) ? role : UserRole.ROLE_USER;
     }
 
     public static UserEntity from(User user) {
-        UserEntity entity = new UserEntity(user.getUsername(), user.getPassword(), user.getRole());
+        UserEntity entity = new UserEntity(user.getUsername(), user.getPassword(), user.getProvider(), user.getProviderId(), user.getRole());
         entity.id = user.getId();
         entity.deletedAt = user.getDeletedAt();
         return entity;
     }
 
     public User toDomain() {
-        return new User(this.id, this.username, this.password, this.role, this.deletedAt);
+        return new User(this.id, this.username, this.password, this.provider, this.providerId, this.role, this.deletedAt);
     }
 }
