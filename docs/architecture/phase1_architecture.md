@@ -1,15 +1,20 @@
+# Phase 1: 세션 기반 중앙 집중형 인증 아키텍처
+
+이 문서는 프로젝트 초기 단계의 **세션 기반 인증 구조**를 설명합니다. 이 단계는 전통적인 웹 애플리케이션의 인증 방식을 따르며, 이후 Phase 2의 Stateless 아키텍처로 진화하기 위한 기초가 됩니다.
+
 ### ✅ Phase1 시스템 아키텍처 다이어그램 
 
 ```mermaid
 graph TD
     %% 노드 정의
-    Client[📱 Client Browser/App]
-    
+    Client[📱 Client Browser]
+
     subgraph Security_Layer [Spring Security Layer]
         Security[🛡️ Spring Security Filter]
+        SessionFilter[🍪 Session Management]
     end
 
-    subgraph App_Layer [Application Layer: base-auth]
+    subgraph App_Layer [Application Layer]
         AuthHandler[🔑 Custom Auth Handler]
         Controller[🎮 UserController]
         Service[⚙️ UserService]
@@ -17,18 +22,19 @@ graph TD
     end
 
     subgraph Persistence_Layer [Persistence Layer]
-        Redis[(🧠 Redis: Session )]
-        DB[(🗄️ PostgreSQL: User )]
+        Redis[(🧠 Redis: Session Store)]
+        DB[(🗄️ PostgreSQL: User Data)]
     end
 
     %% 연결 관계
     Client -->|HTTPS / JSESSIONID| Security
-    Security --> AuthHandler
+    Security --> SessionFilter
+    SessionFilter --> AuthHandler
     AuthHandler --> Controller
     Controller --> Service
     Service -.-> Entity
-    
-    Service -->|Auth State| Redis
+
+    SessionFilter -.->|Store & Verify| Redis
     Service -->|User Data| DB
 
     %% 스타일 설정
@@ -39,31 +45,25 @@ graph TD
     style Redis fill:#ffcdd2
     style DB fill:#ffe0b2
 ```
+
 ---
 
 ### 🔍 주요 흐름 및 구성 요소 설명
 
-이 설계는 **Spring Security**를 기반으로 한 사용자 인증 및 데이터 관리 구조입니다.
+1.  **Stateful 인증 (Session-based)**
+    *   사용자가 로그인에 성공하면 서버는 세션 정보를 생성하고 **Redis**에 저장합니다.
+    *   브라우저에는 `JSESSIONID`라는 세션 키를 쿠키로 발급합니다.
+    *   서버는 모든 요청마다 쿠키의 ID를 Redis와 대조하여 사용자의 인증 상태를 확인합니다.
 
-1.  **Client (브라우저/앱)**
-    *   사용자가 HTTPS 프로토콜을 통해 접속합니다.
-    *   인증된 사용자는 `JSESSIONID`를 쿠키에 담아 서버와 통신합니다.
+2.  **Redis 세션 저장소**
+    *   메모리 기반 저장소인 Redis를 사용하여 세션 조회 속도를 극대화하고, 다중 서버 환경(Scale-out)에서도 세션 정보를 공유할 수 있는 구조를 갖췄습니다.
 
-2.  **Spring Security Filter**
-    *   모든 요청의 관문입니다. 설정된 보안 규칙에 따라 요청을 필터링하고, 인증되지 않은 접근을 차단합니다.
+3.  **Spring Security Layer**
+    *   `UsernamePasswordAuthenticationFilter`를 통해 전통적인 폼 기반 로그인을 처리하며, `SessionManagementConfigurer`를 통해 세션 정책을 관리합니다.
 
-3.  **Application Layer (base-auth)**
-    *   **Custom Auth Handler:** 로그인이 성공하거나 실패했을 때, 혹은 권한이 없을 때의 커스텀 로직을 처리합니다.
-    *   **UserController:** 클라이언트의 요청(REST API)을 받는 엔드포인트입니다.
-    *   **UserService:** 핵심 비즈니스 로직이 수행되는 곳입니다. 세션 상태 확인이나 DB 조회를 지시합니다.
-    *   **User Entity:** 데이터베이스의 테이블과 매핑되는 객체 모델입니다.
-
-4.  **Persistence Layer (저장소)**
-    *   **Redis (Session Store):** 로그인한 사용자의 세션 정보(Auth State)를 메모리에 저장합니다. 속도가 매우 빠르며, 여러 서버 간 세션 공유가 가능합니다.
-    *   **PostgreSQL (User Store):** 사용자의 프로필, 비밀번호, 가입일 등 영구적인 데이터를 저장하는 관계형 데이터베이스입니다.
 ---
 
-**특징:**
-*   **보안성:** Spring Security를 최전방에 두어 보안 계층을 분리했습니다.
-*   **성능:** 세션 정보를 DB가 아닌 Redis에 저장함으로써 데이터베이스 부하를 줄이고 응답 속도를 높였습니다.
-*   **구조화:** 계층형 아키텍처(Layered Architecture)를 따라 유지보수가 용이하게 설계되었습니다.
+### ⚠️ Phase 1의 한계점 및 개선 방향
+*   **서버 상태 의존성**: 인증을 위해 매번 Redis 조회가 필요하며, 세션이 만료되거나 Redis 서버에 문제가 생기면 모든 사용자의 로그인이 해제됩니다.
+*   **확장성 제약**: 진정한 Stateless 구조가 아니므로 마이크로서비스 아키텍처(MSA)나 모바일 환경 대응에 한계가 있습니다.
+*   **결정**: 이러한 한계를 극복하기 위해 Phase 2에서는 **JWT(JSON Web Token) 기반의 Stateless 인증**으로 전환합니다.

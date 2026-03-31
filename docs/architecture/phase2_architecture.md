@@ -1,43 +1,11 @@
-# Phase 2 아키텍처 변화 (Step-by-Step)
+# Phase 2: Stateless JWT 인증 아키텍처
 
-## 1. Phase 2-1: JWT 발급 및 하이브리드 인증
-기존 세션 방식을 유지하면서, 로그인 시 JWT(Access/Refresh) 토큰을 함께 발급하는 단계입니다.
-
-```mermaid
-graph TD
-    Client[📱 Client]
-    
-    subgraph Security_Layer [Spring Security Layer]
-        Security[🛡️ Security Filter]
-    end
-
-    subgraph App_Layer [Application Layer]
-        Controller[🎮 UserController]
-        Service[⚙️ UserService]
-        Domain[📦 User Domain Model]
-    end
-
-    subgraph Persistence_Layer [Persistence Layer]
-        Redis_Session[(🧠 Redis: Session)]
-        Entity[📄 User Persistence Entity]
-        DB[(🗄️ PostgreSQL: User)]
-    end
-
-    Client -->|HTTPS / JSESSIONID| Security
-    Security --> Controller
-    Controller -->|JWT Issue: Header/Cookie| Client
-    Controller --> Service
-    Service -.-> Domain
-    Domain -.-> Entity
-    Entity --> DB
-    
-    Security -.->|Check Auth| Redis_Session
-```
+Phase 2에서는 서버의 상태(Session)를 완전히 제거하고, 모든 인증을 JWT(JSON Web Token)로 대체합니다. 특히 **보안성(HttpOnly Cookie)**과 **확장성(Stateless)**, 그리고 **제어권(Redis RT Storage)**을 동시에 확보하는 구조로 설계되었습니다.
 
 ---
 
-## 2. Phase 2-2: Redis Refresh Token 관리 (RTR 도입)
-Refresh Token의 상태를 Redis에서 관리하여 보안성과 제어권을 확보한 단계입니다.
+## 1. Phase 2-1: 하이브리드 토큰 체계 도입
+세션 방식을 기반으로 토큰 발급 로직을 통합하여 클라이언트에게 JWT(Access/Refresh)를 전달하는 기초 단계입니다.
 
 ```mermaid
 graph TD
@@ -50,41 +18,37 @@ graph TD
     subgraph App_Layer [Application Layer]
         Controller[🎮 UserController]
         Service[⚙️ UserService]
-        Domain[📦 User Domain Model]
+        Domain[📦 User Domain]
     end
 
     subgraph Persistence_Layer [Persistence Layer]
-        Redis_Session[(🧠 Redis: Session)]
-        Redis_RT[(🧠 Redis: Refresh Token)]
-        Entity[📄 User Persistence Entity]
-        DB[(🗄️ PostgreSQL: User)]
+        Redis_Session[(🧠 Redis: Session Store)]
+        DB[(🗄️ PostgreSQL)]
     end
 
     Client -->|HTTPS / JSESSIONID| Security
     Security --> Controller
-    
-    %% JWT 발급 및 RTR
     Controller -->|AccessToken: Header| Client
     Controller -->|RefreshToken: Cookie| Client
-    Controller -->|Store RT| Redis_RT
     
     Controller --> Service
     Service -.-> Domain
-    Domain -.-> Entity
-    Entity --> DB
+    Domain -.-> DB
     
-    Security -.->|Check Auth| Redis_Session
+    Security -.->|Verify Session| Redis_Session
 ```
 
 ---
 
-## 3. Phase 2-3: Stateless JWT 인증 완성 (Target)
-서버의 세션(HttpSession)을 완전히 제거하고, 모든 인증을 JWT 서명 검증만으로 처리하는 최종 단계입니다.
+## 2. Phase 2-2 & 2-3: RTR 기반 Stateless 인증 완성 (현재)
+서버 세션을 제거하고, 매 요청마다 JWT를 검증합니다. **RTR(Refresh Token Rotation)**을 적용하여 보안 위협에 대응합니다.
+
+### ✅ 최종 아키텍처 다이어그램
 
 ```mermaid
 graph TD
     Client[📱 Client]
-    
+
     subgraph Security_Layer [Spring Security Layer]
         JwtFilter[🛡️ JwtAuthenticationFilter]
     end
@@ -96,32 +60,42 @@ graph TD
     end
 
     subgraph Persistence_Layer [Persistence Layer]
-        Redis_RT[(🧠 Redis: Refresh Token)]
-        Entity[📄 User Persistence Entity]
-        DB[(🗄️ PostgreSQL: User)]
+        Redis_RT[(🧠 Redis: RT Storage & RTR)]
+        Repository[📋 UserRepositoryImpl]
+        DB[(🗄️ PostgreSQL)]
     end
 
-    %% Stateless 인증
+    %% Stateless 인증 (Access Token)
     Client -->|Authorization: Bearer <Access>| JwtFilter
-    JwtFilter -->|Signature Verify| Controller
-    
-    %% Token Rotation
-    Client -->|Refresh Token: Cookie| Controller
-    Controller -->|Verify & Rotate| Redis_RT
-    
+    JwtFilter -->|Signature & Exp Verify| Controller
+
+    %% Token Rotation (Refresh Token)
+    Client -->|Refresh Token: HttpOnly Cookie| Controller
+    Controller -->|Rotate & Reissue| Redis_RT
+
+    %% DIP (Clean Architecture)
     Controller --> Service
-    Service -.-> Domain
-    Domain -.-> Entity
-    Entity --> DB
+    Service --> Domain
+    Domain -.-> Repository
+    Repository --> DB
 
     style JwtFilter fill:#ffcdd2,stroke:#c62828
     style Redis_RT fill:#ffcdd2,stroke:#c62828
+    style Domain fill:#f1f8e9,stroke:#33691e
 ```
 
----
+### 🔍 핵심 설계 전략
 
-### 🔍 주요 변화 요약
+1.  **HttpOnly & Secure Cookie (Refresh Token)**
+    *   XSS(Cross-Site Scripting) 공격에 노출되기 쉬운 LocalStorage 대신, JavaScript 접근이 불가능한 **HttpOnly 쿠키**에 Refresh Token을 저장하여 보안성을 강화했습니다.
 
-1.  **Phase 2-1 (Hybrid)**: 세션 기반 인증은 유지하되, 클라이언트에 토큰을 전달하기 시작함.
-2.  **Phase 2-2 (RTR)**: Redis에 Refresh Token을 저장하여 서버 측에서 세션 강제 종료 및 탈취 감지 기능을 확보함.
-3.  **Phase 2-3 (Stateless)**: 서버의 세션 저장소(`JSESSIONID`)를 제거하고, 매 요청마다 JWT를 검증하여 서버의 상태를 없앰(Stateless).
+2.  **RTR (Refresh Token Rotation)**
+    *   새로운 Access Token을 발급받을 때마다 기존 Refresh Token을 무효화하고 **새로운 한 쌍의 토큰**을 재발급합니다.
+    *   이는 토큰 탈취 시 공격자가 탈취한 토큰을 단 1회만 사용할 수 있게 제한하며, 비정상적인 중복 사용 감지 시 해당 유저의 모든 토큰을 즉시 무효화하는 근거가 됩니다.
+
+3.  **Clean Layered Architecture (DIP 적용)**
+    *   **Domain Model (`User`)**: 영속성 기술(JPA)에 의존하지 않는 순수 도메인 객체입니다.
+    *   **Persistence Layer**: 인터페이스(`UserRepository`)를 통해 인프라의 세부 사항을 감춥니다. 이를 통해 향후 DB 교체나 기술 변경에 유연하게 대응할 수 있습니다.
+
+4.  **Stateless Principle**
+    *   모든 권한 정보가 토큰에 포함(Self-contained)되어 있으므로 서버는 사용자의 인증 상태를 메모리에 유지할 필요가 없습니다. 이는 서버의 수평적 확장(Scale-out)을 매우 용이하게 합니다.
