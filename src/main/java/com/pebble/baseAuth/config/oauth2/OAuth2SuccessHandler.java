@@ -32,8 +32,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // Redis에 Refresh Token 저장
         refreshTokenRepository.save(username, refreshToken, jwtProvider.getRefreshExpiration());
 
-        // 쿠키에 토큰 저장
-        addCookie(response, "accessToken", accessToken, (int) (900)); // 15분 (임시값, JwtProvider와 맞추는게 좋음)
+        // [CTO 리뷰 반영] 쿠키 만료 시간을 JwtProvider 설정과 동기화
+        addCookie(response, "accessToken", accessToken, (int) (jwtProvider.getAccessExpiration() / 1000));
         addCookie(response, "refreshToken", refreshToken, (int) (jwtProvider.getRefreshExpiration() / 1000));
 
         // 메인 페이지로 리다이렉트

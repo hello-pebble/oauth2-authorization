@@ -40,4 +40,19 @@ public class User {
     public boolean isDeleted() {
         return this.deletedAt != null;
     }
+
+    /**
+     * 소셜 로그인을 통한 신규 사용자 생성 (정적 팩토리 메서드)
+     */
+    public static User createSocialUser(String username, String provider, String providerId) {
+        return new User(
+                null,
+                username,
+                null, // 소셜 사용자는 비밀번호 없음
+                provider,
+                providerId,
+                UserRole.ROLE_USER,
+                null
+        );
+    }
 }
