@@ -65,6 +65,13 @@ public class JwtProvider {
     }
 
     /**
+     * Access Token 만료 시간 조회
+     */
+    public long getAccessExpiration() {
+        return accessExpiration;
+    }
+
+    /**
      * Refresh Token 만료 시간 조회
      */
     public long getRefreshExpiration() {

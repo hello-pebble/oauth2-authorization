@@ -20,11 +20,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final UserRepository userRepository;
+    private final com.pebble.baseAuth.domain.UserService userService;
 
     @Override
-    @Transactional
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+        // [CTO 리뷰 반영] 외부 IdP API 호출 시 DB 트랜잭션을 잡지 않도록 수정
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
@@ -32,39 +32,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         OAuth2UserInfo oAuth2UserInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(registrationId, attributes);
 
-        User user = saveOrUpdate(oAuth2UserInfo, registrationId);
+        // DB 작업만 트랜잭션 범위 내에서 수행되도록 서비스에 위임
+        User user = userService.saveOrUpdateSocialUser(
+                registrationId, 
+                oAuth2UserInfo.getId(), 
+                oAuth2UserInfo.getEmail(), 
+                oAuth2UserInfo.getName()
+        );
 
         return new CustomOAuth2User(user, attributes);
-    }
-
-    private User saveOrUpdate(OAuth2UserInfo oAuth2UserInfo, String provider) {
-        return userRepository.findByProviderAndProviderIdAndDeletedAtIsNull(provider, oAuth2UserInfo.getId())
-                .map(existingUser -> {
-                    // 필요한 경우 정보 업데이트 로직 추가
-                    return existingUser;
-                })
-                .orElseGet(() -> {
-                    // 소셜 로그인을 통한 첫 가입 시 사용자 생성
-                    String username = oAuth2UserInfo.getEmail();
-                    if (username == null || username.isEmpty()) {
-                        username = provider + "_" + oAuth2UserInfo.getId();
-                    }
-                    
-                    // 만약 중복된 username이 있다면 랜덤 값을 붙여서 생성
-                    if (userRepository.existsByUsernameAndDeletedAtIsNull(username)) {
-                        username = username + "_" + UUID.randomUUID().toString().substring(0, 5);
-                    }
-
-                    User newUser = new User(
-                            null,
-                            username,
-                            null, // 소셜 로그인은 비밀번호 없음
-                            provider,
-                            oAuth2UserInfo.getId(),
-                            UserRole.ROLE_USER,
-                            null
-                    );
-                    return userRepository.save(newUser);
-                });
     }
 }
