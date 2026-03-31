@@ -26,6 +26,8 @@ public class SecurityConfig {
 
     private final CustomAuthenticationHandler authenticationHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final com.pebble.baseAuth.config.oauth2.CustomOAuth2UserService customOAuth2UserService;
+    private final com.pebble.baseAuth.config.oauth2.OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -49,6 +51,11 @@ public class SecurityConfig {
                 // [Phase 2-3] JWT 필터를 UsernamePasswordAuthenticationFilter 앞에 배치
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(oAuth2SuccessHandler)
+                )
+
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(authenticationHandler)
                 )

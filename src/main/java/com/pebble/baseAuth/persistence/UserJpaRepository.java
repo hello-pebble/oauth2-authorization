@@ -10,4 +10,6 @@ public interface UserJpaRepository extends JpaRepository<UserEntity, Long> {
 
     Optional<UserEntity> findByUsernameAndDeletedAtIsNull(String username);
 
+    Optional<UserEntity> findByProviderAndProviderIdAndDeletedAtIsNull(String provider, String providerId);
+
 }

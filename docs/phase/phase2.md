@@ -47,7 +47,7 @@ Phase 2-1: 토큰 발급 로직 구현
 
 #### 2-4. Kotlin 전환 전략 (Phase 2.5)
 | 항목 | 세부 내용 | 상태 |
-| :--- | :--- | :--- |
+| :--- | : :--- | :--- |
 | 프로젝트 설정 | Kotlin 전용 빌드 스크립트 및 Standard Library 의존성 추가 | 🏗️ |
 | 도메인 계층 전환 | `User`, `UserRole` 등 핵심 모델을 Kotlin(Data Class)으로 전환 | 🏗️ |
 | 인프라 계층 전환 | `Security Config`, `JwtProvider` 등 핵심 인프라 코드 전환 | 🏗️ |
@@ -64,5 +64,6 @@ Phase 2-1: 토큰 발급 로직 구현
 ---
 
 ### 🔗 연관 자료
+- **[아키텍처](../architecture/phase2_architecture.md)**
 - **[TDR](tdr/phase2-tdr.md)**
 - **[트러블슈팅](troubleshooting/phase2-troubleshooting.md)**

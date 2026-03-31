@@ -65,6 +65,13 @@ public class JwtProvider {
     }
 
     /**
+     * Refresh Token 만료 시간 조회
+     */
+    public long getRefreshExpiration() {
+        return refreshExpiration;
+    }
+
+    /**
      * 토큰에서 Claims 추출
      */
     public Claims getClaims(String token) {

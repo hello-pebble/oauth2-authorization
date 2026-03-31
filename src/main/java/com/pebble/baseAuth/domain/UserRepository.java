@@ -8,6 +8,8 @@ public interface UserRepository {
 
     Optional<User> findByUsernameAndDeletedAtIsNull(String username);
 
+    Optional<User> findByProviderAndProviderIdAndDeletedAtIsNull(String provider, String providerId);
+
     User save(User user);
 
 }

@@ -25,6 +25,12 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Optional<User> findByProviderAndProviderIdAndDeletedAtIsNull(String provider, String providerId) {
+        return userJpaRepository.findByProviderAndProviderIdAndDeletedAtIsNull(provider, providerId)
+                .map(UserEntity::toDomain);
+    }
+
+    @Override
     public User save(User user) {
         UserEntity entity = UserEntity.from(user);
         return userJpaRepository.save(entity).toDomain();
