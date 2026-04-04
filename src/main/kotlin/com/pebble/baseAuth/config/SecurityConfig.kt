@@ -24,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 class SecurityConfig(
     private val authenticationHandler: CustomAuthenticationHandler,
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
+    private val rateLimitFilter: RateLimitFilter,
     private val customOAuth2UserService: CustomOAuth2UserService,
     private val oAuth2SuccessHandler: OAuth2SuccessHandler
 ) {
@@ -49,6 +50,7 @@ class SecurityConfig(
             }
 
             // [Phase 2-3] JWT 필터를 UsernamePasswordAuthenticationFilter 앞에 배치
+            .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter::class.java)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
 
             .oauth2Login { oauth2 ->
