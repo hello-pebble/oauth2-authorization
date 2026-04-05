@@ -10,26 +10,26 @@
 
 ```mermaid
 graph TD
-    User[👤 User Request] --> Filter[🛡️ RateLimitFilter]
+    User[👤 User Request] --> Filter[RateLimitFilter]
     
     subgraph Filtering_Logic [4-1. Filtering]
-        Filter --> Check{🔍 Has Token?}
-        Check -- NO --> Reject[❌ 429 Reject]
+        Filter --> Check{Has Token?}
+        Check -- NO --> Reject[429 Reject]
     }
     
     Check -- YES --> Capacity{🏗️ Capacity Check}
     
     subgraph Queuing_Logic [4-2. Queuing]
-        Capacity -- Full --> Wait[⏳ Sorted Set Queue]
+        Capacity -- Full --> Wait[Sorted Set Queue]
         Wait --> Scheduler[⚙️ Batch Scheduler]
-        Scheduler --> Allowed[✅ Allowed Set]
+        Scheduler --> Allowed[ Allowed Set]
     end
     
-    Capacity -- OK --> Auth[🔑 JwtAuthenticationFilter]
+    Capacity -- OK --> Auth[JwtAuthenticationFilter]
     Allowed --> Auth
     
-    Auth --> Service[⚙️ UserService]
-    Service --> DB[(🗄️ PostgreSQL)]
+    Auth --> Service[UserService]
+    Service --> DB[(PostgreSQL)]
 ```
 
 ## 3. 핵심 컴포넌트
