@@ -11,25 +11,24 @@ Phase 4에서는 최외곽 필터 계층에서 비정상 트래픽을 선제적�
 ```mermaid
 graph TD
     User["User Request"] --> Filter["RateLimitFilter"]
-    
+
     subgraph Filtering_Logic ["4-1. Filtering"]
         Filter --> Check{"Has Token?"}
         Check -- "NO" --> Reject["429 Reject"]
+        Check -- "YES" --> Capacity["Capacity Check"]
     end
-    
-    Check -- "YES" --> Capacity{"Capacity Check"}
-    
+
     subgraph Queuing_Logic ["4-2. Queuing"]
         Capacity -- "Full" --> Wait["Sorted Set Queue"]
         Wait --> Scheduler["Batch Scheduler"]
         Scheduler --> Allowed["Allowed Set"]
     end
-    
+
     Capacity -- "OK" --> Auth["JwtAuthenticationFilter"]
     Allowed --> Auth
-    
+
     Auth --> Service["UserService"]
-    Service --> DB[("PostgreSQL")]
+    Service --> DB["PostgreSQL"]
 ```
 
 ### 3. 핵심 컴포넌트
