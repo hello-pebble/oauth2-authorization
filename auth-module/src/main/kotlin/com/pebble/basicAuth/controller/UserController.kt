@@ -30,8 +30,10 @@ class UserController(
     private val userService: UserService,
     private val authenticationManager: AuthenticationManager,
     private val jwtProvider: JwtProvider,
-    private val refreshTokenRepository: RefreshTokenRepository,
-    private val waitingRoomService: WaitingRoomService
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private val refreshTokenRepository: RefreshTokenRepository?,
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private val waitingRoomService: WaitingRoomService?
 ) {
 
     private val log = LoggerFactory.getLogger(this::class.java)
