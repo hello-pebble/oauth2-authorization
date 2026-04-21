@@ -13,15 +13,10 @@ import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
 @Configuration
-/**
- * [권한 ?�스???�입 - Step 3]
- * [Phase 2-3] Stateless ?�증 체계�??�환?�니??
- */
 @EnableMethodSecurity
 class SecurityConfig(
     private val authenticationHandler: CustomAuthenticationHandler,
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
-    // private val rateLimitFilter: RateLimitFilter,
     private val customOAuth2UserService: CustomOAuth2UserService,
     private val oAuth2SuccessHandler: OAuth2SuccessHandler
 ) {
@@ -46,8 +41,6 @@ class SecurityConfig(
             }
 
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
-            // .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter::class.java)
-
 
             .oauth2Login { oauth2 ->
                 oauth2.userInfoEndpoint { userInfo -> userInfo.userService(customOAuth2UserService) }
