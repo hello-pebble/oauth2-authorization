@@ -7,7 +7,7 @@ COPY settings.gradle.kts build.gradle.kts ./
 COPY auth-module ./auth-module
 
 RUN chmod +x ./gradlew
-RUN ./gradlew :auth-module:bootJar --no-daemon
+RUN ./gradlew :auth-module:bootJar --no-daemon --stacktrace --info
 
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
