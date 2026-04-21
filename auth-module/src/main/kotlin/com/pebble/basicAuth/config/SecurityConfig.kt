@@ -14,14 +14,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 /**
- * [ê¶Œí•œ ?œìŠ¤???„ìž… - Step 3]
- * [Phase 2-3] Stateless ?¸ì¦ ì²´ê³„ë¡??„í™˜?©ë‹ˆ??
+ * [ê¶Œí•œ ?ï¿½ìŠ¤???ï¿½ìž… - Step 3]
+ * [Phase 2-3] Stateless ?ï¿½ì¦ ì²´ê³„ï¿½??ï¿½í™˜?ï¿½ë‹ˆ??
  */
 @EnableMethodSecurity
 class SecurityConfig(
     private val authenticationHandler: CustomAuthenticationHandler,
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
-    private val rateLimitFilter: RateLimitFilter,
+    // private val rateLimitFilter: RateLimitFilter,
     private val customOAuth2UserService: CustomOAuth2UserService,
     private val oAuth2SuccessHandler: OAuth2SuccessHandler
 ) {
@@ -30,12 +30,10 @@ class SecurityConfig(
     @Throws(Exception::class)
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
-            // [Phase 2-3] REST API ê¸°ë°˜?´ë?ë¡?CSRF ë°?ê¸°ë³¸ ë¡œê·¸???¼ì? ?¬ìš©?˜ì? ?ŠìŠµ?ˆë‹¤.
             .csrf { it.disable() }
             .formLogin { it.disable() }
             .httpBasic { it.disable() }
 
-            // [Phase 2-3] ëª¨ë“  ?¸ì…˜ ê´€ë¦¬ë? Statelessë¡??¤ì • (JSESSIONID ?ì„± ë°©ì?)
             .sessionManagement { session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
@@ -47,9 +45,9 @@ class SecurityConfig(
                     .anyRequest().authenticated()
             }
 
-            // [Phase 2-3] JWT ?„í„°ë¥?UsernamePasswordAuthenticationFilter ?žì— ë°°ì¹˜
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
-            .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter::class.java)
+            // .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter::class.java)
+
 
             .oauth2Login { oauth2 ->
                 oauth2.userInfoEndpoint { userInfo -> userInfo.userService(customOAuth2UserService) }

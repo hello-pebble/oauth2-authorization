@@ -83,11 +83,11 @@ class UserController(
         val accessToken = jwtProvider.createAccessToken(request.username, role)
         val refreshToken = jwtProvider.createRefreshToken(request.username)
 
-        // [Phase 2-2] Refresh Token을 Redis에 저장 (Key: RT:{username})
-        refreshTokenRepository.save(request.username, refreshToken, refreshExpiration)
+        // [Phase 2-2] Refresh Token을 Redis에 저장 (Key: RT:{username}) - 일시 주석 처리
+        // refreshTokenRepository.save(request.username, refreshToken, refreshExpiration)
 
-        // [Phase 4-2] 로그인 성공 시 대기열 허용 명부에서 제거 (메모리 관리)
-        waitingRoomService.removeFromProceed(request.username)
+        // [Phase 4-2] 로그인 성공 시 대기열 허용 명부에서 제거 (메모리 관리) - 일시 주석 처리
+        // waitingRoomService.removeFromProceed(request.username)
 
         // Refresh Token을 HttpOnly 쿠키로 설정
         val refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)

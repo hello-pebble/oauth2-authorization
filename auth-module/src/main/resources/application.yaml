@@ -2,15 +2,17 @@ spring:
   application:
     name: basic-auth
   datasource:
-    url: jdbc:postgresql://db.dccrpwphbvgfbzbsvqls.supabase.co:5432/postgres
-    username: postgres
+    # Supabase Transaction Pooler (포트 6543) 사용 및 파라미터 보강
+    url: jdbc:postgresql://aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres
+    username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-  data:
-    redis:
-      host: localhost
-      port: 6379
+  # data:
+  #   redis:
+  #     host: ${REDIS_HOST:localhost}
+  #     port: ${REDIS_PORT:6379}
   jpa:
+    database: postgresql
     generate-ddl: true
     show-sql: true
     hibernate:
@@ -18,7 +20,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        # Dialect를 명시적으로 설정하여 메타데이터 조회 실패를 방지
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
   security:
     oauth2:
       client:
@@ -31,6 +37,6 @@ spring:
               - profile
 
 jwt:
-  secret: z8vB7yK2pL5mN9qR3wX0sT6vF1gH4jK8lO2pM5nQ9rS3uW6xY0zB2cE5fH8kK1mN
-  access-expiration: 900000 # 15 min (15 * 60 * 1000)
-  refresh-expiration: 604800000 # 7 days (7 * 24 * 60 * 60 * 1000)
+  secret: ${JWT_SECRET}
+  access-expiration: 900000
+  refresh-expiration: 604800000
