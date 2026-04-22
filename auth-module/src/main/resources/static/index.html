@@ -231,6 +231,7 @@
     <script>
         let accessToken = "";
         let currentUserId = "";
+        // GATEWAY_URL 제거: 상대 경로 사용으로 배포 환경 대응
 
         async function handleLogin() {
             const formData = new FormData();
@@ -238,7 +239,7 @@
             formData.append('password', document.getElementById('password').value);
 
             try {
-                const res = await fetch('/api/v1/login', { method: 'POST', body: formData });
+                const res = await fetch(`/api/v1/login`, { method: 'POST', body: formData });
                 if (res.ok) {
                     accessToken = res.headers.get('Authorization').split(' ')[1];
                     const data = await res.json();
@@ -288,8 +289,7 @@
 
         async function accessService(serviceId) {
             try {
-                // 실제 서비스 호출 시뮬레이션 (여기서는 /users/me 정보로 대체)
-                const res = await fetch('/api/v1/users/me', {
+                const res = await fetch(`/api/v1/users/me`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
                 const data = await res.json();
@@ -298,7 +298,7 @@
                 document.getElementById('service-section').style.display = 'none';
                 document.getElementById('user-info').style.display = 'block';
                 document.getElementById('profile-data').innerText = JSON.stringify({
-                    message: `${serviceId}에 성공적으로 접근하였습니다.`,
+                    message: `${serviceId}에 성공적으로 접근하였습니다. (Gateway Routed)`,
                     userData: data
                 }, null, 2);
             } catch (e) { alert('서비스 접근 실패'); }
