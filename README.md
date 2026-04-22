@@ -31,8 +31,7 @@ graph LR
     click Step3.5 "./docs/phase/phase3_5.md"
     click Step4 "./docs/phase/phase4.md"
 ```
-Step3.5<br/>
-평소보다 20배 높은 트래픽이 몰리며 서버의 초기 설정값(Thread/Connection Pool)이 임계치에 도달
+https://api-gateway-m46j.onrender.com
 
 ---
 ### 🧾 프로젝트 목표
