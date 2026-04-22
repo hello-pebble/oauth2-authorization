@@ -2,14 +2,12 @@ spring:
   application:
     name: basic-auth
   datasource:
-    # Supabase Transaction Pooler
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-    # HikariCP 설정 보강 (연결 개수 제한)
     hikari:
-      maximum-pool-size: 3 # 최대 커넥션 개수를 3개로 제한 (Supabase 15개 제한 대응)
+      maximum-pool-size: 3
       minimum-idle: 1
       idle-timeout: 30000
       max-lifetime: 1800000
@@ -20,7 +18,7 @@ spring:
     generate-ddl: true
     show-sql: true
     hibernate:
-      ddl-auto: update # 처음 실행 시 테이블 생성을 위해 유지
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
@@ -28,6 +26,7 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
+
   security:
     oauth2:
       client:
@@ -38,6 +37,7 @@ spring:
             scope:
               - email
               - profile
+
 jwt:
   secret: ${JWT_SECRET}
   access-expiration: 900000
