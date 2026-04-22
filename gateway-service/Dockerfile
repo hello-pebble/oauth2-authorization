@@ -8,7 +8,12 @@ COPY build.gradle.kts .
 COPY settings.gradle.kts .
 COPY gateway-service gateway-service
 
-RUN chmod +x gradlew && ./gradlew :gateway-service:bootJar --no-daemon
+RUN chmod +x gradlew && ./gradlew :gateway-service:bootJar \
+    --no-daemon \
+    --no-parallel \
+    --max-workers=1 \
+    -Dorg.gradle.jvmargs="-Xmx512m" \
+    -Dfile.encoding=UTF-8
 
 # Run Stage
 FROM eclipse-temurin:21-jre-jammy
@@ -18,5 +23,4 @@ COPY --from=build /app/gateway-service/build/libs/*.jar app.jar
 
 EXPOSE 8000
 
-# 쉘 형식으로 변경해야 환경변수 치환 가능
 ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8000} -Dspring.profiles.active=prod -jar app.jar"]
