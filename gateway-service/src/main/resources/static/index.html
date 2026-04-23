@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base-Auth MSA Portal</title>
+    <style>
+        :root { --primary: #4f46e5; --secondary: #10b981; --bg: #f9fafb; --card: #ffffff; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg); margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .container { max-width: 1000px; width: 90%; text-align: center; }
+        h1 { color: #111827; font-size: 2.5rem; margin-bottom: 10px; }
+        p.subtitle { color: #6b7280; margin-bottom: 40px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        .card { background: var(--card); padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); transition: transform 0.2s; text-decoration: none; color: inherit; display: block; border: 2px solid transparent; }
+        .card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .card.public { border-top: 6px solid var(--secondary); }
+        .card.private { border-top: 6px solid var(--primary); }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 0.75em; font-weight: 600; margin-bottom: 15px; }
+        .badge-public { background: #ecfdf5; color: #065f46; }
+        .badge-private { background: #eef2ff; color: #3730a3; }
+        h3 { margin: 10px 0; font-size: 1.25rem; }
+        p.desc { color: #6b7280; font-size: 0.9rem; margin-bottom: 20px; }
+        .btn { background: #f3f4f6; padding: 10px 20px; border-radius: 8px; font-weight: 500; display: inline-block; }
+        .card:hover .btn { background: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Base-Auth Gateway Portal</h1>
+        <p class="subtitle">Microservice Architecture 기반의 통합 인증 테스트 환경입니다.</p>
+        
+        <div class="grid">
+            <!-- 1. Preview Service (Public) -->
+            <a href="/preview/" class="card public">
+                <span class="badge badge-public">Public Service</span>
+                <h3>Preview Module</h3>
+                <p class="desc">인증 없이 누구나 접근 가능한 서비스입니다. 게이트웨이의 무인증 라우팅 기능을 테스트합니다.</p>
+                <div class="btn">접속하기</div>
+            </a>
+
+            <!-- 2. Task Service (Private) -->
+            <a href="/tasks/" class="card private">
+                <span class="badge badge-private">Private Service</span>
+                <h3>Task Dashboard</h3>
+                <p class="desc">JWT 인증이 필요한 서비스입니다. 로그인하지 않은 경우 자동으로 인증 서버로 리다이렉트됩니다.</p>
+                <div class="btn">보안 접속</div>
+            </a>
+
+            <!-- 3. Matching Service (Private) -->
+            <a href="/matching/" class="card private">
+                <span class="badge badge-private">Private Service</span>
+                <h3>Matching System</h3>
+                <p class="desc">사용자 간 매칭 및 추천을 담당하는 보안 모듈입니다. 실시간 상태 확인이 가능합니다.</p>
+                <div class="btn">보안 접속</div>
+            </a>
+
+            <!-- 4. Auth Service (Control) -->
+            <a href="/login" class="card private" style="border-top-color: #ef4444;">
+                <span class="badge" style="background: #fef2f2; color: #991b1b;">Control Center</span>
+                <h3>Authentication Server</h3>
+                <p class="desc">직접 로그인을 시도하거나 계정 정보를 관리합니다. OIDC 및 OAuth2 프로토콜을 처리합니다.</p>
+                <div class="btn">로그인 페이지</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

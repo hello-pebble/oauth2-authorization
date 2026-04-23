@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 
 @Configuration
 @EnableMethodSecurity
@@ -25,33 +26,42 @@ class SecurityConfig(
     @Throws(Exception::class)
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
-            .csrf { it.disable() }
-            .formLogin { it.disable() }
-            .httpBasic { it.disable() }
-
+            .csrf { it.disable() } // 테스트 편의를 위해 CSRF 비활성화
+            
+            // 1. 세션 정책: 인증 서버는 로그인 과정을 위해 세션이 필요함 (IF_REQUIRED)
             .sessionManagement { session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             }
 
             .authorizeHttpRequests { auth ->
                 auth.requestMatchers("/", "/index.html", "/static/**", "/css/**", "/js/**", "/favicon.ico").permitAll()
                     .requestMatchers("/api/v1/users/signup", "/api/v1/login", "/api/v1/refresh").permitAll()
-                    .requestMatchers("/api/v1/waiting-room/**").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
-                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                    .requestMatchers("/actuator/health").permitAll()
                     .anyRequest().authenticated()
             }
 
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+
+            // 2. 기본 로그인 폼 활성화
+            .formLogin { form -> 
+                form.permitAll()
+                form.defaultSuccessUrl("/index.html", true) // 자신의 토큰 뷰어 페이지로 이동
+            }
 
             .oauth2Login { oauth2 ->
                 oauth2.userInfoEndpoint { userInfo -> userInfo.userService(customOAuth2UserService) }
                     .successHandler(oAuth2SuccessHandler)
             }
 
+            // 3. 예외 처리: API 요청에 대해서만 커스텀 핸들러(JSON) 적용
             .exceptionHandling { exception ->
-                exception.authenticationEntryPoint(authenticationHandler)
+                exception.defaultAuthenticationEntryPointFor(
+                    authenticationHandler,
+                    AntPathRequestMatcher("/api/**")
+                )
             }
+            
             .logout { logout ->
                 logout.logoutUrl("/api/v1/logout")
                     .logoutSuccessHandler(authenticationHandler)

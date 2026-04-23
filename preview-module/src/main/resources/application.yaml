@@ -1,0 +1,11 @@
+server:
+  port: ${PORT:8084}
+
+spring:
+  application:
+    name: preview-service
+
+logging:
+  level:
+    org.springframework.security: INFO
+    com.pebble.preview: DEBUG

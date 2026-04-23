@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Matching Service - 실시간 매칭 상태</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; padding: 25px; background-color: #f9fafb; color: #111827; }
+        .container { max-width: 850px; margin: auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        h1 { color: #6366f1; border-bottom: 2px solid #f3f4f6; padding-bottom: 15px; margin-top: 0; }
+        .status-row { display: flex; gap: 20px; margin-bottom: 30px; }
+        .info-card { flex: 1; padding: 20px; border-radius: 12px; border: 1px solid #e5e7eb; position: relative; }
+        .gateway-card { border-top: 4px solid #f59e0b; background-color: #fffbeb; }
+        .auth-card { border-top: 4px solid #6366f1; background-color: #eef2ff; }
+        .json-area { background: #1e1e1e; color: #dcdcdc; padding: 20px; border-radius: 8px; font-family: 'Menlo', monospace; font-size: 0.85em; overflow-x: auto; margin-top: 20px; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 0.75em; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
+        .badge-active { background: #10b981; color: white; }
+        .badge-inactive { background: #ef4444; color: white; }
+        .stat-number { font-size: 2em; font-weight: bold; margin: 10px 0 0 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Matching Service Dashboard</h1>
+        
+        <div class="status-row">
+            <div class="info-card gateway-card">
+                <span id="gateway-badge" class="badge">Checking Gateway...</span>
+                <div><strong>Network Infrastructure</strong></div>
+                <div id="gateway-detail" class="stat-number">-</div>
+                <div id="gateway-host" style="font-size: 0.85em; margin-top: 5px; color: #6b7280;"></div>
+            </div>
+            <div class="info-card auth-card">
+                <span id="auth-badge" class="badge">Checking Auth...</span>
+                <div><strong>Authentication Details</strong></div>
+                <div id="auth-user" class="stat-number">-</div>
+                <div id="auth-roles" style="font-size: 0.85em; margin-top: 5px; color: #6b7280;"></div>
+            </div>
+        </div>
+
+        <h3>📦 Data Exchange (JSON)</h3>
+        <div id="json-result" class="json-area">Loading...</div>
+    </div>
+
+    <script>
+        async function fetchMatchingInfo() {
+            const token = localStorage.getItem('accessToken');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            try {
+                const response = await fetch('/api/v1/matching/access-info', { headers });
+                
+                if (!response.ok) {
+                    throw new Error(`Auth Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // 1. JSON 표시
+                document.getElementById('json-result').textContent = JSON.stringify(data, null, 2);
+
+                // 2. 게이트웨이 시각화
+                const gateBadge = document.getElementById('gateway-badge');
+                if (data.accessInfo.viaGateway) {
+                    gateBadge.textContent = "Gateway Connected";
+                    gateBadge.className = "badge badge-active";
+                    document.getElementById('gateway-detail').textContent = "Via Gateway";
+                    document.getElementById('gateway-host').textContent = `Host: ${data.accessInfo.gatewayHeaders['x-forwarded-host'] || 'Unknown'}`;
+                } else {
+                    gateBadge.textContent = "Direct Access";
+                    gateBadge.className = "badge badge-inactive";
+                    document.getElementById('gateway-detail').textContent = "Local Access";
+                }
+
+                // 3. 인증 시각화
+                const authBadge = document.getElementById('auth-badge');
+                if (data.authInfo.authenticated) {
+                    authBadge.textContent = "Authenticated";
+                    authBadge.className = "badge badge-active";
+                    document.getElementById('auth-user').textContent = data.authInfo.name;
+                    document.getElementById('auth-roles').textContent = `Authorites: ${data.authInfo.authorities.join(', ')}`;
+                } else {
+                    authBadge.textContent = "Guest Mode";
+                    authBadge.className = "badge badge-inactive";
+                    document.getElementById('auth-user').textContent = "No Auth";
+                }
+
+            } catch (err) {
+                document.getElementById('json-result').textContent = "Authentication required or Service Unavailable.\n\nError: " + err.message;
+                document.getElementById('auth-badge').className = "badge badge-inactive";
+                document.getElementById('auth-badge').textContent = "Error";
+            }
+        }
+
+        fetchMatchingInfo();
+    </script>
+</body>
+</html>
