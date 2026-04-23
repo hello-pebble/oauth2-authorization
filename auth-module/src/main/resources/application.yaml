@@ -2,43 +2,42 @@ spring:
   application:
     name: basic-auth
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 3
-      minimum-idle: 1
-      idle-timeout: 30000
-      max-lifetime: 1800000
-      connection-timeout: 20000
+    url: ${DB_URL:jdbc:h2:mem:authdb;DB_CLOSE_DELAY=-1}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
 
   jpa:
-    database: postgresql
+    database: h2
     generate-ddl: true
     show-sql: true
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        jdbc:
-          lob:
-            non_contextual_creation: true
 
   security:
     oauth2:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
+            client-id: ${GOOGLE_CLIENT_ID:dummy}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dummy}
             scope:
               - email
               - profile
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
+
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:vmgS06Dx8p5t8S6v8O0p6S8v8O0p6S8v8O0p6S8v8O0p}
   access-expiration: 900000
   refresh-expiration: 604800000

@@ -18,7 +18,6 @@ import org.springframework.security.oauth2.core.oidc.OidcScopes
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
 import org.springframework.security.web.SecurityFilterChain
@@ -37,9 +36,16 @@ class AuthorizationServerConfig {
     @Order(Ordered.HIGHEST_PRECEDENCE)
     @Throws(Exception::class)
     fun authorizationServerSecurityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http)
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer::class.java)
-            .oidc(Customizer.withDefaults()) // OpenID Connect 활성화
+        val authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer()
+        
+        http
+            .securityMatcher(authorizationServerConfigurer.endpointsMatcher)
+            .with(authorizationServerConfigurer) { configurer ->
+                configurer.oidc(Customizer.withDefaults()) // OpenID Connect 활성화
+            }
+            .csrf { csrf ->
+                csrf.ignoringRequestMatchers(authorizationServerConfigurer.endpointsMatcher)
+            }
 
         http
             .exceptionHandling { exceptions ->
