@@ -15,7 +15,7 @@ spring:
           uri: ${AUTH_SERVICE_URL}
           order: -1
           predicates:
-            - Path=/, /index.html, /login.html, /signup.html, /login, /signup, /favicon.ico, /api/v1/login, /api/v1/users/signup, /api/v1/users/me, /api/v1/logout, /api/v1/refresh, /api/tasks/access-info
+            - Path=/login.html, /signup.html, /login, /signup, /favicon.ico, /api/v1/login, /api/v1/users/signup, /api/v1/users/me, /api/v1/logout, /api/v1/refresh, /api/tasks/access-info
 
         # Auth: /me 페이지 → auth 모듈 index.html
         - id: me-page

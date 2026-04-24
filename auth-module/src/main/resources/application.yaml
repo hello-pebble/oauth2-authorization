@@ -35,6 +35,7 @@ security:
             - email
             - profile
 
+
 management:
   endpoints:
     web:
