@@ -29,34 +29,58 @@
         <h3>🔑 Current Session Info (JSON)</h3>
         <div id="auth-json" class="token-card">Loading user info...</div>
 
-        <div class="btn-group">
-            <a href="http://localhost:8000/" class="btn btn-primary">게이트웨이 포털로 이동</a>
-            <a href="http://localhost:8000/tasks/" class="btn btn-outline">Task 대시보드</a>
-            <a href="http://localhost:8000/matching/" class="btn btn-outline">Matching 시스템</a>
+        <div class="btn-group" id="auth-buttons">
+            <!-- 상태에 따라 자바스크립트로 버튼이 채워집니다 -->
         </div>
-    </div>
+        </div>
 
-    <script>
+        <script>
+        function updateUI() {
+            const token = localStorage.getItem('accessToken');
+            const btnGroup = document.getElementById('auth-buttons');
+
+            if (token) {
+                btnGroup.innerHTML = `
+                    <button onclick="logout()" class="btn btn-outline" style="color:red">로그아웃</button>
+                    <a href="/" class="btn btn-primary">게이트웨이 포털</a>
+                `;
+            } else {
+                btnGroup.innerHTML = `
+                    <a href="/login.html" class="btn btn-primary">로그인</a>
+                    <a href="/signup.html" class="btn btn-outline">회원가입</a>
+                `;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            // 서버 측 로그아웃 호출 (선택 사항)
+            fetch('/api/v1/logout', { method: 'POST' }).finally(() => {
+                alert('로그아웃 되었습니다.');
+                // 현재 도메인의 루트로 이동하여 하드코딩 회피
+                window.location.href = '/'; 
+            });
+        }
+
         async function fetchInfo() {
             try {
-                // 현재 세션의 유저 정보를 가져오는 API 호출 (상대 경로 사용)
                 const response = await fetch('/api/v1/users/me');
                 if (response.ok) {
                     const data = await response.json();
                     document.getElementById('auth-json').textContent = JSON.stringify(data, null, 2);
-                    
-                    // MSA 서비스 호출을 위해 토큰이 있다면 로컬 스토리지에 저장 (데모용)
-                    if (data.accessToken) {
-                        localStorage.setItem('accessToken', data.accessToken);
-                    }
+                    if (data.accessToken) localStorage.setItem('accessToken', data.accessToken);
                 } else {
-                    document.getElementById('auth-json').textContent = "로그인 세션 정보를 불러올 수 없습니다.";
+                    document.getElementById('auth-json').textContent = "로그인 세션이 없습니다.";
                 }
             } catch (err) {
-                document.getElementById('auth-json').textContent = "오류 발생: " + err.message;
+                document.getElementById('auth-json').textContent = "세션 확인 실패";
             }
+            updateUI();
         }
+
+        updateUI(); // 초기화
         fetchInfo();
-    </script>
+        </script>
+
 </body>
 </html>

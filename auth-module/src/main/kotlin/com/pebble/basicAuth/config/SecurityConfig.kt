@@ -19,7 +19,9 @@ class SecurityConfig(
     private val authenticationHandler: CustomAuthenticationHandler,
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
     private val customOAuth2UserService: CustomOAuth2UserService,
-    private val oAuth2SuccessHandler: OAuth2SuccessHandler
+    private val oAuth2SuccessHandler: OAuth2SuccessHandler,
+    private val formLoginSuccessHandler: FormLoginSuccessHandler,
+    private val formLoginFailureHandler: FormLoginFailureHandler
 ) {
 
     @Bean
@@ -35,7 +37,8 @@ class SecurityConfig(
 
             .authorizeHttpRequests { auth ->
                 auth.requestMatchers("/", "/index.html", "/static/**", "/css/**", "/js/**", "/favicon.ico").permitAll()
-                    .requestMatchers("/api/v1/users/signup", "/api/v1/login", "/api/v1/refresh").permitAll()
+                    .requestMatchers("/login", "/signup", "/login.html", "/signup.html", "/api/v1/users/signup", "/api/v1/login", "/api/v1/refresh").permitAll()
+                    .requestMatchers("/api/tasks/access-info").permitAll()
                     .requestMatchers("/h2-console/**").permitAll()
                     .requestMatchers("/actuator/health").permitAll()
                     .anyRequest().authenticated()
@@ -43,14 +46,18 @@ class SecurityConfig(
 
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
 
-            // 2. 기본 로그인 폼 활성화
-            .formLogin { form -> 
-                form.permitAll()
-                form.defaultSuccessUrl("/index.html", true) // 자신의 토큰 뷰어 페이지로 이동
+            // 2. 커스텀 로그인 폼 활성화
+            .formLogin { form ->
+                form.loginPage("/login.html")
+                    .loginProcessingUrl("/login")
+                    .successHandler(formLoginSuccessHandler)
+                    .failureHandler(formLoginFailureHandler)
+                    .permitAll()
             }
 
             .oauth2Login { oauth2 ->
-                oauth2.userInfoEndpoint { userInfo -> userInfo.userService(customOAuth2UserService) }
+                oauth2.loginPage("/login.html")
+                    .userInfoEndpoint { userInfo -> userInfo.userService(customOAuth2UserService) }
                     .successHandler(oAuth2SuccessHandler)
             }
 
@@ -64,6 +71,7 @@ class SecurityConfig(
             
             .logout { logout ->
                 logout.logoutUrl("/api/v1/logout")
+                    .deleteCookies("accessToken", "refreshToken")
                     .logoutSuccessHandler(authenticationHandler)
             }
             .headers { headers -> headers.frameOptions { it.disable() } }

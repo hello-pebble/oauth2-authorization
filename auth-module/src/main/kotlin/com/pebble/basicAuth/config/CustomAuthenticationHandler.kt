@@ -25,7 +25,7 @@ class CustomAuthenticationHandler(
         
         // 브라우저의 HTML 요청인 경우 로그인 페이지로 리다이렉트
         if (accept != null && accept.contains("text/html")) {
-            response.sendRedirect("/login")
+            response.sendRedirect("/login.html")
         } else {
             // API 요청인 경우 기존처럼 JSON 응답
             response.status = HttpServletResponse.SC_UNAUTHORIZED

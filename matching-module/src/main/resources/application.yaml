@@ -25,3 +25,4 @@ spring:
 logging:
   level:
     com.pebble.matching: DEBUG
+    org.springframework.security: DEBUG

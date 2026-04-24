@@ -1,32 +1,39 @@
 spring:
   application:
     name: basic-auth
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-  h2:
-    console:
-      enabled: false
 
-  jpa:
-    database: postgresql
-    generate-ddl: true
-    show-sql: true
-    hibernate:
-      ddl-auto: update
+server:
+  address: 0.0.0.0
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
 
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID:dummy}
-            client-secret: ${GOOGLE_CLIENT_SECRET:dummy}
-            scope:
-              - email
-              - profile
+datasource:
+  url: ${DB_URL:jdbc:postgresql://localhost:5432/authdb}
+  username: ${DB_USERNAME:auth}
+  password: ${DB_PASSWORD:auth}
+  driver-class-name: org.postgresql.Driver
+
+h2:
+  console:
+    enabled: false
+
+jpa:
+  database: postgresql
+  generate-ddl: true
+  show-sql: true
+  hibernate:
+    ddl-auto: update
+
+security:
+  oauth2:
+    client:
+      registration:
+        google:
+          client-id: ${GOOGLE_CLIENT_ID:dummy}
+          client-secret: ${GOOGLE_CLIENT_SECRET:dummy}
+          scope:
+            - email
+            - profile
 
 management:
   endpoints:
@@ -41,3 +48,7 @@ jwt:
   secret: ${JWT_SECRET:vmgS06Dx8p5t8S6v8O0p6S8v8O0p6S8v8O0p6S8v8O0p}
   access-expiration: 900000
   refresh-expiration: 604800000
+
+auth:
+  gateway-url: ${GATEWAY_URL:http://localhost:8000}
+  redirect-path: ${REDIRECT_PATH:/me}
