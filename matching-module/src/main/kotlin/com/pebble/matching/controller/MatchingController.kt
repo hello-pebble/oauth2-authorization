@@ -61,15 +61,19 @@ class MatchingController(
         val authInfo = mutableMapOf<String, Any>()
         if (jwt != null) {
             authInfo["authenticated"] = true
-            authInfo["name"] = jwt.subject
-            authInfo["claims"] = jwt.claims
+            authInfo["subject"]       = jwt.subject
+            authInfo["roles"]         = jwt.claims["roles"]?.toString() ?: ""
+            authInfo["token_preview"] = jwt.tokenValue.take(15) + "..."
         } else {
             authInfo["authenticated"] = false
         }
-        
-        response["accessInfo"] = accessInfo
-        response["authInfo"] = authInfo
-        response["matchesCount"] = if (jwt != null) matchingService.getMyMatches(getUserIdFromJwt(jwt)).size else 0
+
+        val matches = if (jwt != null) matchingService.getMyMatches(getUserIdFromJwt(jwt)) else emptyList()
+
+        response["accessInfo"]   = accessInfo
+        response["authInfo"]     = authInfo
+        response["matchesCount"] = matches.size
+        response["matches"]      = matches
         
         return ResponseEntity.ok(response)
     }

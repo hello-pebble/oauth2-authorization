@@ -40,12 +40,14 @@ class UserController(
     private var refreshExpiration: Long = 0
 
     @PostMapping("/api/v1/users/signup")
+    @ResponseBody
     fun signUp(@Valid @RequestBody request: UserSignUpRequest): ResponseEntity<UserResponse> {
         val response = UserResponse.from(userService.signUp(request.username, request.email, request.password))
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
 
     @PostMapping("/api/v1/login")
+    @ResponseBody
     fun login(@Valid @RequestBody request: LoginRequest): ResponseEntity<Any> {
         // 사용자 인증 처리 (SecurityContext 저장 생략 - Stateless 방식)
         val authentication = authenticationManager.authenticate(
@@ -69,7 +71,7 @@ class UserController(
             .build()
 
         val customUserDetails = authentication.principal as CustomUserDetails
-        val response = UserResponse.from(customUserDetails.user)
+        val response = UserResponse.from(customUserDetails.user, accessToken)
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
@@ -78,7 +80,8 @@ class UserController(
     }
 
     @PostMapping("/api/v1/refresh")
-    fun refresh(request: HttpServletRequest, response: HttpServletResponse): ResponseEntity<Void> {
+    @ResponseBody
+    fun refresh(request: HttpServletRequest, response: HttpServletResponse): ResponseEntity<UserResponse> {
         val refreshToken = (request.cookies ?: emptyArray<Cookie>())
             .find { it.name == "refreshToken" }
             ?.value ?: throw RuntimeException("Refresh Token이 존재하지 않습니다.")
@@ -112,21 +115,30 @@ class UserController(
             .sameSite("Strict")
             .build()
 
+        val responseBody = UserResponse.from(user, newAccessToken)
+
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, newRefreshTokenCookie.toString())
             .header(HttpHeaders.AUTHORIZATION, "Bearer $newAccessToken")
-            .build()
+            .body(responseBody)
     }
 
     @GetMapping("/api/v1/users/me")
+    @ResponseBody
     fun me(authentication: Authentication): ResponseEntity<UserResponse> {
-        val response = UserResponse.from(userService.findByUsername(authentication.name))
+        val user = userService.findByUsername(authentication.name)
+        
+        // 만약 헤더에 토큰이 없어서 세션으로 인증된 경우에도, 
+        // 다른 서비스(task 등)에서 사용할 수 있도록 토큰을 생성해서 반환합니다.
+        val token = if (authentication.credentials is String && (authentication.credentials as String).isNotEmpty()) {
+            authentication.credentials as String
+        } else {
+            jwtProvider.createAccessToken(user.username, user.role.name)
+        }
+        
+        val response = UserResponse.from(user, token)
         return ResponseEntity.ok(response)
     }
-
-    @GetMapping("/api/v1/users/admin/check")
-    @PreAuthorize("hasRole('ADMIN')")
-    fun adminOnly(): ResponseEntity<String> = ResponseEntity.ok("관리자 인증 성공!")
 
     data class UserSignUpRequest(
         @field:NotBlank(message = "사용자명은 필수입니다.")
@@ -145,9 +157,15 @@ class UserController(
         val password: String = ""
     )
     
-    data class UserResponse(val id: Long?, val username: String, val email: String?) {
+    data class UserResponse(
+        val id: Long?, 
+        val username: String, 
+        val email: String?,
+        val accessToken: String? = null
+    ) {
         companion object {
-            fun from(user: User): UserResponse = UserResponse(user.id, user.username, user.email)
+            fun from(user: User, accessToken: String? = null): UserResponse = 
+                UserResponse(user.id, user.username, user.email, accessToken)
         }
     }
 }

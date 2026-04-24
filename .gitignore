@@ -1,12 +1,11 @@
 HELP.md
-**/application-dev.yaml
+**dev.yaml
 .gradle
 **/build/
 !gradle/wrapper/gradle-wrapper.jar
 /docs/report/**
 /docs/skills/**
 /docs/plans/**
-
 
 # Logs
 *.log

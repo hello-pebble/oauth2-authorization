@@ -18,6 +18,8 @@
         .badge-gate { background: #f39c12; }
         .badge-auth { background: #3498db; }
         .error-msg { color: #d63031; background: #fab1a0; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: none; }
+        .back-btn { font-size: 0.85rem; color: #6366f1; text-decoration: none; padding: 6px 14px; border: 1px solid #6366f1; border-radius: 6px; }
+        .back-btn:hover { background: #6366f1; color: white; }
     </style>
 </head>
 <body>
@@ -25,8 +27,9 @@
         <h1>
             Task Service Dashboard
             <div>
-                <span class="badge badge-gate">Gateway Enabled</span>
-                <span class="badge badge-auth">JWT Required</span>
+                <span class="badge badge-gate">Gateway</span>
+                <span class="badge badge-auth">JWT</span>
+                <a href="/" class="back-btn">← 포털로</a>
             </div>
         </h1>
 
