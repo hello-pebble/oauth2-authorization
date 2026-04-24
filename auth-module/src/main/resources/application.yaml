@@ -24,16 +24,19 @@ jpa:
   hibernate:
     ddl-auto: update
 
-security:
-  oauth2:
-    client:
-      registration:
-        google:
-          client-id: ${GOOGLE_CLIENT_ID:dummy}
-          client-secret: ${GOOGLE_CLIENT_SECRET:dummy}
-          scope:
-            - email
-            - profile
+spring:
+  application:
+    name: basic-auth
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:dummy}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dummy}
+            scope:
+              - email
+              - profile
 
 management:
   endpoints:
